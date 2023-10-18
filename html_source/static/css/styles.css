@@ -1,0 +1,30 @@
+.my-footer {
+    height: 5em;
+    background-color: rgb(51, 51, 54);
+    margin-top: 1.5em;
+    padding: 1em;
+    color: antiquewhite;
+    font-size: 80;
+}
+
+.redText {
+  color: red;
+}
+
+/* override styles here */
+.notie-container {
+  box-shadow: none;
+}
+
+.datepicker {
+  z-index: 10000
+  
+}
+
+.datepicker-dropdown {
+  position: static
+}
+
+.room-image {
+    max-width: 50%;
+  }
