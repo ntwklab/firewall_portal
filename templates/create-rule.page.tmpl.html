@@ -1,0 +1,50 @@
+{{template "base" .}}
+
+{{define "content"}}
+<div class="container">
+    <div class="row">
+        <div class="col">
+            <h1 class="text-center mt-4">Create Rule</h1>
+            <p>Firewall Rule Creator</p>
+
+            <form method="post" action="" class="" novalidate>
+              <input type="hidden" name="csrf_token" value="{{.CSRFToken}}">
+
+              {{$res := index .Data "createrule"}}
+              <div class="form-group mt-5">
+                  <label for="source_ip">Source IP:</label>
+                  {{with .Form.Errors.Get "source_ip"}}
+                      <label class="text-danger">{{.}}</label>
+                  {{end}}
+                  <input class="form-control {{with .Form.Errors.Get "source_ip"}} is-invalid {{end}}"
+                  type="text" name="source_ip" id="source_ip" value="{{$res.SourceIP}}"  required autocomplete="off">
+              </div>
+
+              <div class="form-group">
+                  <label for="destination_ip">Destination IP:</label>
+                  {{with .Form.Errors.Get "destination_ip"}}
+                      <label class="text-danger">{{.}}</label>
+                  {{end}}
+                  <input class="form-control {{with .Form.Errors.Get "destination_ip"}} is-invalid {{end}}" type="text" name="destination_ip" id="destination_ip" value="{{$res.DestinationIP}}" required autocomplete="off">
+              </div>
+
+              <div class="form-group">
+                  <label for="port">Port:</label>
+                  {{with .Form.Errors.Get "Port"}}
+                      <label class="text-danger">{{.}}</label>
+                  {{end}}
+                  <input class="form-control {{with .Form.Errors.Get "port"}} is-invalid {{end}}" type="port" name="port" id="port" value="{{$res.Port}}" required autocomplete="off">
+              </div>
+
+
+
+              <hr>
+
+              <input type="submit" class="btn btn-primary" value="Reserve Room">
+
+          </form>
+        </div>
+    </div>
+</div>
+{{end}}
+
