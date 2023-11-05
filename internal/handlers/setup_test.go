@@ -24,7 +24,7 @@ var pathToTemplates = "./../../templates"
 var functions = template.FuncMap{}
 
 func getRoutes() http.Handler {
-	gob.Register(models.Reservation{})
+	gob.Register(models.CreateRule{})
 
 	// change this to true when in production
 	app.InProduction = false
