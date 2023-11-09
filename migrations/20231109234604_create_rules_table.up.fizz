@@ -1,0 +1,6 @@
+create_table("rules") {
+  t.Column("id", "integer", {primary: true})
+  t.Column("source_ip", "string", {})
+  t.Column("destination_ip", "string", {})
+  t.Column("port", "string", {})
+}
