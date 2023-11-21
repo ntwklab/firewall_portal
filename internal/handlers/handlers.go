@@ -37,13 +37,13 @@ func NewHandlers(r *Repository) {
 
 // Home is the home page handler
 func (m *Repository) Home(w http.ResponseWriter, r *http.Request) {
-	render.RenderTemplate(w, r, "home.page.tmpl.html", &models.TemplateData{})
+	render.Template(w, r, "home.page.tmpl.html", &models.TemplateData{})
 }
 
 // About is the about page handler
 func (m *Repository) About(w http.ResponseWriter, r *http.Request) {
 	// send the data to the template
-	render.RenderTemplate(w, r, "about.page.tmpl.html", &models.TemplateData{})
+	render.Template(w, r, "about.page.tmpl.html", &models.TemplateData{})
 }
 
 // Renders the Create Rule page
@@ -52,7 +52,7 @@ func (m *Repository) CreateRule(w http.ResponseWriter, r *http.Request) {
 	data := make(map[string]interface{})
 	data["createrule"] = emptyCreaterule
 
-	render.RenderTemplate(w, r, "create-rule.page.tmpl.html", &models.TemplateData{
+	render.Template(w, r, "create-rule.page.tmpl.html", &models.TemplateData{
 		Form: forms.New(nil),
 		Data: data,
 	})
@@ -81,7 +81,7 @@ func (m *Repository) PostCreateRule(w http.ResponseWriter, r *http.Request) {
 		data := make(map[string]interface{})
 		data["createrule"] = createrule
 
-		render.RenderTemplate(w, r, "create-rule.page.tmpl.html", &models.TemplateData{
+		render.Template(w, r, "create-rule.page.tmpl.html", &models.TemplateData{
 			Form: form,
 			Data: data,
 		})
@@ -105,7 +105,7 @@ func (m *Repository) CreateRuleSummary(w http.ResponseWriter, r *http.Request) {
 	data := make(map[string]interface{})
 	data["createrule"] = createrule
 
-	render.RenderTemplate(w, r, "create-rule-summary.page.tmpl.html", &models.TemplateData{
+	render.Template(w, r, "create-rule-summary.page.tmpl.html", &models.TemplateData{
 		Data: data,
 	})
 }
