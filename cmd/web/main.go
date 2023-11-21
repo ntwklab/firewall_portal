@@ -10,6 +10,7 @@ import (
 
 	"github.com/alexedwards/scs/v2"
 	"github.com/ntwklab/firewall_portal/internal/config"
+	"github.com/ntwklab/firewall_portal/internal/driver"
 	"github.com/ntwklab/firewall_portal/internal/handlers"
 	"github.com/ntwklab/firewall_portal/internal/helpers"
 	"github.com/ntwklab/firewall_portal/internal/models"
@@ -25,10 +26,11 @@ var errorLog *log.Logger
 
 // main is the main
 func main() {
-	err := run()
+	db, err := run()
 	if err != nil {
 		log.Fatal(err)
 	}
+	defer db.SQL.Close()
 
 	fmt.Println("Starting application on port " + portNumber)
 
@@ -42,7 +44,7 @@ func main() {
 
 }
 
-func run() error {
+func run() (*driver.DB, error) {
 
 	// What am i going to put in the session
 	gob.Register(models.CreateRule{})
@@ -64,19 +66,27 @@ func run() error {
 
 	app.Session = session
 
+	//connect to database
+	log.Println("Connecting to the database...")
+	db, err := driver.ConnectSQL("host=localhost port=5432 dbname=firewall_rules user=stefankelly password=")
+	if err != nil {
+		log.Fatal("Cannot connec to the database! Dying...")
+	}
+	log.Println("Connected to the database!")
+
 	tc, err := render.CreateTemplateCache()
 	if err != nil {
 		log.Fatal("cannot create template cache")
-		return err
+		return nil, err
 	}
 
 	app.TemplateCache = tc
 	app.UseCache = false
 
-	repo := handlers.NewRepo(&app)
+	repo := handlers.NewRepo(&app, db)
 	handlers.NewHandlers(repo)
 	render.NewTemplates(&app)
 	helpers.NewHelpers(&app)
 
-	return nil
+	return db, nil
 }

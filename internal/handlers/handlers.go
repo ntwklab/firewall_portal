@@ -4,10 +4,13 @@ import (
 	"net/http"
 
 	"github.com/ntwklab/firewall_portal/internal/config"
+	"github.com/ntwklab/firewall_portal/internal/driver"
 	"github.com/ntwklab/firewall_portal/internal/forms"
 	"github.com/ntwklab/firewall_portal/internal/helpers"
 	"github.com/ntwklab/firewall_portal/internal/models"
 	"github.com/ntwklab/firewall_portal/internal/render"
+	"github.com/ntwklab/firewall_portal/internal/repository"
+	"github.com/ntwklab/firewall_portal/internal/repository/dbrepo"
 )
 
 // Repo is the repository used by the handlers
@@ -16,12 +19,14 @@ var Repo *Repository
 // Repository is the repository type
 type Repository struct {
 	App *config.AppConfig
+	DB  repository.DatabaseRepo
 }
 
 // NewRepo creates a new repository
-func NewRepo(a *config.AppConfig) *Repository {
+func NewRepo(a *config.AppConfig, db *driver.DB) *Repository {
 	return &Repository{
 		App: a,
+		DB:  dbrepo.NewPostgresRepo(db.SQL, a),
 	}
 }
 
