@@ -88,6 +88,11 @@ func (m *Repository) PostCreateRule(w http.ResponseWriter, r *http.Request) {
 		return
 	}
 
+	err = m.DB.InsertRule(createrule)
+	if err != nil {
+		helpers.ServerError(w, err)
+	}
+
 	m.App.Session.Put(r.Context(), "createrule", createrule)
 	http.Redirect(w, r, "/create-rule-summary", http.StatusSeeOther)
 }
