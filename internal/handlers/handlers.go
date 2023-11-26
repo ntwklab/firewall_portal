@@ -58,7 +58,64 @@ func (m *Repository) CreateRule(w http.ResponseWriter, r *http.Request) {
 	})
 }
 
-// PostCreateRule  handles the posting of a CreateRule form
+// // PostCreateRule  handles the posting of a CreateRule form
+// func (m *Repository) PostCreateRule(w http.ResponseWriter, r *http.Request) {
+// 	err := r.ParseForm()
+// 	if err != nil {
+// 		helpers.ServerError(w, err)
+// 		return
+// 	}
+
+// 	createrule := models.CreateRule{
+// 		SourceIP:      r.Form.Get("source_ip"),
+// 		DestinationIP: r.Form.Get("destination_ip"),
+// 		Port:          r.Form.Get("port"),
+// 	}
+
+// 	form := forms.New(r.PostForm)
+
+// 	form.Required("source_ip", "destination_ip", "port")
+// 	form.MinLength("source_ip", 3, r)
+
+// 	if !form.Valid() {
+// 		data := make(map[string]interface{})
+// 		data["createrule"] = createrule
+
+// 		render.Template(w, r, "create-rule.page.tmpl.html", &models.TemplateData{
+// 			Form: form,
+// 			Data: data,
+// 		})
+// 		return
+// 	}
+
+// 	err = m.DB.InsertRule(createrule)
+// 	if err != nil {
+// 		helpers.ServerError(w, err)
+// 	}
+
+// 	m.App.Session.Put(r.Context(), "createrule", createrule)
+// 	http.Redirect(w, r, "/create-rule-summary", http.StatusSeeOther)
+// }
+
+func (m *Repository) CreateRuleSummary(w http.ResponseWriter, r *http.Request) {
+	createrule, ok := m.App.Session.Get(r.Context(), "createrule").(models.CreateRule)
+	if !ok {
+		m.App.ErrorLog.Println("Can't get error from session")
+		m.App.Session.Put(r.Context(), "error", "Can't get createrule from session")
+		http.Redirect(w, r, "/", http.StatusTemporaryRedirect)
+		return
+	}
+
+	m.App.Session.Remove(r.Context(), "createrule")
+	data := make(map[string]interface{})
+	data["createrule"] = createrule
+
+	render.Template(w, r, "create-rule-summary.page.tmpl.html", &models.TemplateData{
+		Data: data,
+	})
+}
+
+// PostCreateRule handles the posting of a CreateRule form
 func (m *Repository) PostCreateRule(w http.ResponseWriter, r *http.Request) {
 	err := r.ParseForm()
 	if err != nil {
@@ -88,29 +145,29 @@ func (m *Repository) PostCreateRule(w http.ResponseWriter, r *http.Request) {
 		return
 	}
 
+	// Check for duplicate rule before insertion
+	duplicateExists, err := m.DB.CheckDuplicateRule(createrule)
+	if err != nil {
+		helpers.ServerError(w, err)
+		return
+	}
+
+	if duplicateExists {
+		// Set an error message in the session
+		m.App.Session.Put(r.Context(), "error", "Duplicate rule found. This rule already exists in the database.")
+
+		// Redirect to /create-rule and display the error message
+		http.Redirect(w, r, "/create-rule", http.StatusSeeOther)
+		return
+	}
+
+	// No duplicate found, proceed with insertion
 	err = m.DB.InsertRule(createrule)
 	if err != nil {
 		helpers.ServerError(w, err)
+		return
 	}
 
 	m.App.Session.Put(r.Context(), "createrule", createrule)
 	http.Redirect(w, r, "/create-rule-summary", http.StatusSeeOther)
-}
-
-func (m *Repository) CreateRuleSummary(w http.ResponseWriter, r *http.Request) {
-	createrule, ok := m.App.Session.Get(r.Context(), "createrule").(models.CreateRule)
-	if !ok {
-		m.App.ErrorLog.Println("Can't get error from session")
-		m.App.Session.Put(r.Context(), "error", "Can't get createrule from session")
-		http.Redirect(w, r, "/", http.StatusTemporaryRedirect)
-		return
-	}
-
-	m.App.Session.Remove(r.Context(), "createrule")
-	data := make(map[string]interface{})
-	data["createrule"] = createrule
-
-	render.Template(w, r, "create-rule-summary.page.tmpl.html", &models.TemplateData{
-		Data: data,
-	})
 }
