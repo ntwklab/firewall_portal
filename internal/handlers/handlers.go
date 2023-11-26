@@ -1,12 +1,15 @@
 package handlers
 
 import (
+	"fmt"
 	"net/http"
+	"os"
 
 	"github.com/ntwklab/firewall_portal/internal/config"
 	"github.com/ntwklab/firewall_portal/internal/driver"
 	"github.com/ntwklab/firewall_portal/internal/forms"
 	"github.com/ntwklab/firewall_portal/internal/helpers"
+	ciscoasa "github.com/ntwklab/firewall_portal/internal/infrastructure/cisco_asa"
 	"github.com/ntwklab/firewall_portal/internal/models"
 	"github.com/ntwklab/firewall_portal/internal/render"
 	"github.com/ntwklab/firewall_portal/internal/repository"
@@ -170,4 +173,28 @@ func (m *Repository) PostCreateRule(w http.ResponseWriter, r *http.Request) {
 
 	m.App.Session.Put(r.Context(), "createrule", createrule)
 	http.Redirect(w, r, "/create-rule-summary", http.StatusSeeOther)
+
+	// Terraform
+	ruleName := "foo"
+	intf := "OUTSIDE"
+	source := createrule.SourceIP
+	destination := createrule.DestinationIP
+	service := fmt.Sprintf("tcp/%s", createrule.Port)
+
+	asaConfig := ciscoasa.GenerateASAConfig(ruleName, intf, source, destination, service)
+	fmt.Println(asaConfig)
+
+	// Write to a file
+	file, err := os.Create("cisco_asa_terraform.tf")
+	if err != nil {
+		helpers.ServerError(w, err)
+		return
+	}
+	defer file.Close()
+
+	_, err = file.WriteString(asaConfig)
+	if err != nil {
+		helpers.ServerError(w, err)
+		return
+	}
 }
