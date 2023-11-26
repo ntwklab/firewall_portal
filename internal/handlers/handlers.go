@@ -174,7 +174,7 @@ func (m *Repository) PostCreateRule(w http.ResponseWriter, r *http.Request) {
 	http.Redirect(w, r, "/create-rule-summary", http.StatusSeeOther)
 
 	// Terraform
-	ruleName := "foo"
+	ruleName := fmt.Sprintf("%s_%s_%s", createrule.SourceIP, createrule.DestinationIP, createrule.Port)
 	intf := "OUTSIDE"
 	source := createrule.SourceIP
 	destination := createrule.DestinationIP
