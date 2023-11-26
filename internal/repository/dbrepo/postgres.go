@@ -33,3 +33,21 @@ func (m *postgresDBRepo) InsertRule(rule models.CreateRule) error {
 
 	return nil
 }
+
+// CheckDuplicateRule checks if a duplicate rule already exists in the database
+func (p *postgresDBRepo) CheckDuplicateRule(createrule models.CreateRule) (bool, error) {
+	query := `
+        SELECT EXISTS (
+            SELECT 1 FROM rules
+            WHERE source_ip = $1 AND destination_ip = $2 AND port = $3
+        )
+    `
+
+	var exists bool
+	err := p.DB.QueryRow(query, createrule.SourceIP, createrule.DestinationIP, createrule.Port).Scan(&exists)
+	if err != nil {
+		return false, err
+	}
+
+	return exists, nil
+}

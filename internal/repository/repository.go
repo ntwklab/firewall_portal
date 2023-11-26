@@ -6,4 +6,5 @@ type DatabaseRepo interface {
 	AllUsers() bool
 
 	InsertRule(rule models.CreateRule) error
+	CheckDuplicateRule(rule models.CreateRule) (bool, error)
 }
