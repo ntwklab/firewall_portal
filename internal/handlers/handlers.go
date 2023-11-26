@@ -1,12 +1,14 @@
 package handlers
 
 import (
+	"fmt"
 	"net/http"
 
 	"github.com/ntwklab/firewall_portal/internal/config"
 	"github.com/ntwklab/firewall_portal/internal/driver"
 	"github.com/ntwklab/firewall_portal/internal/forms"
 	"github.com/ntwklab/firewall_portal/internal/helpers"
+	ciscoasa "github.com/ntwklab/firewall_portal/internal/infrastructure/cisco_asa"
 	"github.com/ntwklab/firewall_portal/internal/models"
 	"github.com/ntwklab/firewall_portal/internal/render"
 	"github.com/ntwklab/firewall_portal/internal/repository"
@@ -170,4 +172,17 @@ func (m *Repository) PostCreateRule(w http.ResponseWriter, r *http.Request) {
 
 	m.App.Session.Put(r.Context(), "createrule", createrule)
 	http.Redirect(w, r, "/create-rule-summary", http.StatusSeeOther)
+
+	// Terraform
+	ruleName := fmt.Sprintf("%s_%s_%s", createrule.SourceIP, createrule.DestinationIP, createrule.Port)
+	intf := "OUTSIDE"
+	source := createrule.SourceIP
+	destination := createrule.DestinationIP
+	service := fmt.Sprintf("tcp/%s", createrule.Port)
+
+	asaConfig := ciscoasa.GenerateASAConfig(ruleName, intf, source, destination, service)
+	fmt.Println(asaConfig)
+
+	// Write to a file
+	ciscoasa.AppendASAConfigToFile(asaConfig)
 }
