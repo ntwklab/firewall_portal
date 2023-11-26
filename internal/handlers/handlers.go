@@ -3,7 +3,6 @@ package handlers
 import (
 	"fmt"
 	"net/http"
-	"os"
 
 	"github.com/ntwklab/firewall_portal/internal/config"
 	"github.com/ntwklab/firewall_portal/internal/driver"
@@ -185,16 +184,5 @@ func (m *Repository) PostCreateRule(w http.ResponseWriter, r *http.Request) {
 	fmt.Println(asaConfig)
 
 	// Write to a file
-	file, err := os.Create("cisco_asa_terraform.tf")
-	if err != nil {
-		helpers.ServerError(w, err)
-		return
-	}
-	defer file.Close()
-
-	_, err = file.WriteString(asaConfig)
-	if err != nil {
-		helpers.ServerError(w, err)
-		return
-	}
+	ciscoasa.AppendASAConfigToFile(asaConfig)
 }
