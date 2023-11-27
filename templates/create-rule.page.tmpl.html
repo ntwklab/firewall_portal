@@ -7,7 +7,7 @@
             <h1 class="text-center mt-4">Create Rule</h1>
             <p>Firewall Rule Creator</p>
 
-            <form method="post" action="" class="" novalidate>
+            <form method="post" action="" class="needs-validation" novalidate id="createRuleForm">
               <input type="hidden" name="csrf_token" value="{{.CSRFToken}}">
 
               {{$res := index .Data "createrule"}}
@@ -37,7 +37,7 @@
               </div>
 
               <hr>
-              <input type="submit" class="btn btn-primary" value="Create Rule">
+              <button type="button" onclick="checkDuplicateAndSubmit()" class="btn btn-primary">Create Rule</button>
 
           </form>
         </div>

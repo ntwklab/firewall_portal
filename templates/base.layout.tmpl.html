@@ -234,8 +234,33 @@ html{{define "base"}}
     }
   }
 
+  function checkDuplicateAndSubmit() {
+      let form = document.getElementById('createRuleForm');
+      if (!form.checkValidity()) {
+          return;
+      }
+
+      let formData = new FormData(form);
+
+      fetch('/check-duplicate', {
+          method: 'POST',
+          body: formData
+      })
+      .then(response => response.json())
+      .then(data => {
+          if (data.duplicateExists) {
+              notify("Duplicate rule found. This rule already exists in the database.", "error");
+          } else {
+              form.submit();
+          }
+      })
+      .catch(error => {
+          console.error('Error:', error);
+      });
+  }
+
 </script>
 </body>
 </html>
 
-{{end}}ß
+{{end}}
