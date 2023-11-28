@@ -23,7 +23,7 @@ resource "ciscoasa_access_in_rules" "%s" {
 
 func AppendASAConfigToFile(asaConfig string) error {
 	// Open the file in append mode or create if it doesn't exist
-	file, err := os.OpenFile("cisco_asa_terraform.tf", os.O_APPEND|os.O_CREATE|os.O_WRONLY, 0644)
+	file, err := os.OpenFile("/Users/stefankelly/Terraform/asa/asaterraform/main.tf", os.O_APPEND|os.O_CREATE|os.O_WRONLY, 0644)
 	if err != nil {
 		return err
 	}

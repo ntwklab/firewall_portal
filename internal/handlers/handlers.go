@@ -1,8 +1,10 @@
 package handlers
 
 import (
+	"encoding/json"
 	"fmt"
 	"net/http"
+	"strings"
 
 	"github.com/ntwklab/firewall_portal/internal/config"
 	"github.com/ntwklab/firewall_portal/internal/driver"
@@ -60,45 +62,7 @@ func (m *Repository) CreateRule(w http.ResponseWriter, r *http.Request) {
 	})
 }
 
-// // PostCreateRule  handles the posting of a CreateRule form
-// func (m *Repository) PostCreateRule(w http.ResponseWriter, r *http.Request) {
-// 	err := r.ParseForm()
-// 	if err != nil {
-// 		helpers.ServerError(w, err)
-// 		return
-// 	}
-
-// 	createrule := models.CreateRule{
-// 		SourceIP:      r.Form.Get("source_ip"),
-// 		DestinationIP: r.Form.Get("destination_ip"),
-// 		Port:          r.Form.Get("port"),
-// 	}
-
-// 	form := forms.New(r.PostForm)
-
-// 	form.Required("source_ip", "destination_ip", "port")
-// 	form.MinLength("source_ip", 3, r)
-
-// 	if !form.Valid() {
-// 		data := make(map[string]interface{})
-// 		data["createrule"] = createrule
-
-// 		render.Template(w, r, "create-rule.page.tmpl.html", &models.TemplateData{
-// 			Form: form,
-// 			Data: data,
-// 		})
-// 		return
-// 	}
-
-// 	err = m.DB.InsertRule(createrule)
-// 	if err != nil {
-// 		helpers.ServerError(w, err)
-// 	}
-
-// 	m.App.Session.Put(r.Context(), "createrule", createrule)
-// 	http.Redirect(w, r, "/create-rule-summary", http.StatusSeeOther)
-// }
-
+// Displays the form inputs to the user once the new rule ahs been added to the DB
 func (m *Repository) CreateRuleSummary(w http.ResponseWriter, r *http.Request) {
 	createrule, ok := m.App.Session.Get(r.Context(), "createrule").(models.CreateRule)
 	if !ok {
@@ -117,7 +81,7 @@ func (m *Repository) CreateRuleSummary(w http.ResponseWriter, r *http.Request) {
 	})
 }
 
-// PostCreateRule handles the posting of a CreateRule form
+// PostCreateRule handles the posting of a CreateRule form to the DB and write the Terraform
 func (m *Repository) PostCreateRule(w http.ResponseWriter, r *http.Request) {
 	err := r.ParseForm()
 	if err != nil {
@@ -147,23 +111,6 @@ func (m *Repository) PostCreateRule(w http.ResponseWriter, r *http.Request) {
 		return
 	}
 
-	// Check for duplicate rule before insertion
-	duplicateExists, err := m.DB.CheckDuplicateRule(createrule)
-	if err != nil {
-		helpers.ServerError(w, err)
-		return
-	}
-
-	if duplicateExists {
-		// Set an error message in the session
-		m.App.Session.Put(r.Context(), "error", "Duplicate rule found. This rule already exists in the database.")
-
-		// Redirect to /create-rule and display the error message
-		http.Redirect(w, r, "/create-rule", http.StatusSeeOther)
-		return
-	}
-
-	// No duplicate found, proceed with insertion
 	err = m.DB.InsertRule(createrule)
 	if err != nil {
 		helpers.ServerError(w, err)
@@ -174,7 +121,11 @@ func (m *Repository) PostCreateRule(w http.ResponseWriter, r *http.Request) {
 	http.Redirect(w, r, "/create-rule-summary", http.StatusSeeOther)
 
 	// Terraform
-	ruleName := fmt.Sprintf("%s_%s_%s", createrule.SourceIP, createrule.DestinationIP, createrule.Port)
+	// Replace dots with underscores
+	formattedSourceIP := strings.ReplaceAll(createrule.SourceIP, ".", "_")
+	formattedDestinationIP := strings.ReplaceAll(createrule.DestinationIP, ".", "_")
+
+	ruleName := fmt.Sprintf("_%s_%s_%s", formattedSourceIP, formattedDestinationIP, createrule.Port)
 	intf := "OUTSIDE"
 	source := createrule.SourceIP
 	destination := createrule.DestinationIP
@@ -185,4 +136,44 @@ func (m *Repository) PostCreateRule(w http.ResponseWriter, r *http.Request) {
 
 	// Write to a file
 	ciscoasa.AppendASAConfigToFile(asaConfig)
+}
+
+// Check for duplicates in the database without refresh of page, and display error banner if duplicate found
+func (app *Repository) CheckDuplicate(w http.ResponseWriter, r *http.Request) {
+	// Parse the form data
+	err := r.ParseForm()
+	if err != nil {
+		// Handle parsing error
+		http.Error(w, err.Error(), http.StatusBadRequest)
+		return
+	}
+
+	// Retrieve form values
+	sourceIP := r.Form.Get("source_ip")
+	destinationIP := r.Form.Get("destination_ip")
+	port := r.Form.Get("port")
+
+	// Create a CreateRule object with the form data
+	createrule := models.CreateRule{
+		SourceIP:      sourceIP,
+		DestinationIP: destinationIP,
+		Port:          port,
+	}
+
+	// Check for duplicate rule
+	duplicateExists, err := app.DB.CheckDuplicateRule(createrule)
+	if err != nil {
+		// Handle database error
+		http.Error(w, err.Error(), http.StatusInternalServerError)
+		return
+	}
+
+	// Prepare response JSON
+	response := map[string]bool{
+		"duplicateExists": duplicateExists,
+	}
+
+	// Set response headers and write JSON response
+	w.Header().Set("Content-Type", "application/json")
+	json.NewEncoder(w).Encode(response)
 }
