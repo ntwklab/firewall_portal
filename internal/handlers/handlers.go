@@ -4,6 +4,7 @@ import (
 	"encoding/json"
 	"fmt"
 	"net/http"
+	"strings"
 
 	"github.com/ntwklab/firewall_portal/internal/config"
 	"github.com/ntwklab/firewall_portal/internal/driver"
@@ -120,7 +121,11 @@ func (m *Repository) PostCreateRule(w http.ResponseWriter, r *http.Request) {
 	http.Redirect(w, r, "/create-rule-summary", http.StatusSeeOther)
 
 	// Terraform
-	ruleName := fmt.Sprintf("%s_%s_%s", createrule.SourceIP, createrule.DestinationIP, createrule.Port)
+	// Replace dots with underscores
+	formattedSourceIP := strings.ReplaceAll(createrule.SourceIP, ".", "_")
+	formattedDestinationIP := strings.ReplaceAll(createrule.DestinationIP, ".", "_")
+
+	ruleName := fmt.Sprintf("_%s_%s_%s", formattedSourceIP, formattedDestinationIP, createrule.Port)
 	intf := "OUTSIDE"
 	source := createrule.SourceIP
 	destination := createrule.DestinationIP
