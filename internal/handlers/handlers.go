@@ -132,10 +132,19 @@ func (m *Repository) PostCreateRule(w http.ResponseWriter, r *http.Request) {
 	service := fmt.Sprintf("tcp/%s", createrule.Port)
 
 	asaConfig := ciscoasa.GenerateASAConfig(ruleName, intf, source, destination, service)
-	fmt.Println(asaConfig)
 
-	// Write to a file
+	//Pull repo to go dir
+
+	// Write to a file to main.tf
 	ciscoasa.AppendASAConfigToFile(asaConfig)
+
+	// Create new branch in GitLab and commit the New branch
+	// err = gitlab.CreateBranchCommit()
+	// if err != nil {
+	// 	fmt.Println("Error performing Git operations:", err)
+	// 	return
+	// }
+
 }
 
 // Check for duplicates in the database without refresh of page, and display error banner if duplicate found
